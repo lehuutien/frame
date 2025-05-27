@@ -370,28 +370,27 @@
       });
     });
 
-    if (isIOS) {
-      // ⚠️ iOS: tạo dataURL và mở ngay
-      const dataUrl = canvas.toDataURL('image/png');
-      const newWindow = window.open();
-      if (newWindow) {
-        newWindow.document.write(`
-          <html>
-            <head><title>Ảnh của bạn</title></head>
-            <body style="margin:0;padding:0;">
-              <img src="${dataUrl}" style="width:100%;display:block;" />
-              <p style="text-align:center;font-family:sans-serif;font-size: 40px;font-weight: bold;margin-top: 20px;color: #333;">Nhấn giữ ảnh để lưu về máy</p>
-            </body>
-          </html>
-        `);
-        hideLoading();
-        showToast("Đã mở ảnh. Nhấn giữ để lưu.");
-      } else {
-        hideLoading();
-        alert("iOS đã chặn popup. Hãy tắt trình chặn hoặc dùng Safari.");
-      }
+	if (isIOS) {
+	  const dataUrl = canvas.toDataURL('image/png');
+	  const previewDiv = document.getElementById('ios-preview');
+	  previewDiv.innerHTML =
+		'<img src="' + dataUrl + '" alt="Ảnh vừa tạo" ' +
+		'style="width:90%;max-width:500px;border-radius:12px;' +
+		'box-shadow:0 4px 12px rgba(0,0,0,0.2);" />' +
+		'<p style="' +
+		  'text-align: center;' +
+		  'font-family: Quicksand, sans-serif;' +
+		  'font-size: 20px;' +
+		  'font-weight: bold;' +
+		  'color: #333;' +
+		  'margin-top: 12px;' +
+		'">Nhấn giữ ảnh để lưu về máy</p>';
 
-    } else {
+	  hideLoading();
+	  showToast("Đã tạo ảnh. Nhấn giữ để lưu!");
+	}
+
+	else {
       // ✅ Android + PC: tải về trực tiếp
       canvas.toBlob((blob) => {
         const blobUrl = URL.createObjectURL(blob);
@@ -550,5 +549,7 @@
 		animation: spin 1s linear infinite;">
 		</div>
 	</div>
+	
+	<div id="ios-preview" style="text-align:center; margin-top: 20px;"></div>
    </body>
 </html>
