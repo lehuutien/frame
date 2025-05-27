@@ -319,101 +319,77 @@
 
 		 
         // Download image with frame and text
-         downloadBtn.addEventListener('click', () => {
-	  if (!userImg.src) {
-		alert("Vui lòng upload ảnh trước.");
-		return;
-	  }
-		showLoading();
-	  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        downloadBtn.addEventListener('click', () => {
+  if (!userImg.src) {
+    alert("Vui lòng upload ảnh trước.");
+    return;
+  }
 
-	  Promise.all([
-		new Promise(res => userImg.complete ? res() : userImg.onload = res),
-		new Promise(res => frameImg.complete ? res() : frameImg.onload = res)
-	  ]).then(() => {
-		const canvas = document.createElement('canvas');
-		const ctx = canvas.getContext('2d');
+  showLoading();
 
-		const containerRect = container.getBoundingClientRect();
-		canvas.width = frameImg.naturalWidth;
-		canvas.height = frameImg.naturalHeight;
-		canvas.style.width = containerRect.width + 'px';
-		canvas.style.height = containerRect.height + 'px';
+  Promise.all([
+    new Promise(res => userImg.complete ? res() : userImg.onload = res),
+    new Promise(res => frameImg.complete ? res() : frameImg.onload = res)
+  ]).then(() => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-		const scale = canvas.width / containerRect.width;
-		ctx.scale(scale, scale);
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const containerRect = container.getBoundingClientRect();
+    canvas.width = frameImg.naturalWidth;
+    canvas.height = frameImg.naturalHeight;
+    canvas.style.width = containerRect.width + 'px';
+    canvas.style.height = containerRect.height + 'px';
 
-		const userRect = userImg.getBoundingClientRect();
-		const drawX = userRect.left - containerRect.left;
-		const drawY = userRect.top - containerRect.top;
-		const drawWidth = userRect.width;
-		const drawHeight = userRect.height;
+    const scale = canvas.width / containerRect.width;
+    ctx.scale(scale, scale);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
-		ctx.drawImage(frameImg, 0, 0, containerRect.width, containerRect.height);
+    const userRect = userImg.getBoundingClientRect();
+    const drawX = userRect.left - containerRect.left;
+    const drawY = userRect.top - containerRect.top;
+    const drawWidth = userRect.width;
+    const drawHeight = userRect.height;
 
-		textLayers.forEach(layer => {
-		  const style = getComputedStyle(layer);
-		  const x = layer.offsetLeft;
-		  const y = layer.offsetTop + parseInt(style.fontSize) * 0.15;
+    ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
+    ctx.drawImage(frameImg, 0, 0, containerRect.width, containerRect.height);
 
-		  ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseInt(style.fontSize)}px ${style.fontFamily}`;
-		  ctx.fillStyle = style.color;
-		  ctx.textBaseline = 'top';
+    textLayers.forEach(layer => {
+      const style = getComputedStyle(layer);
+      const x = layer.offsetLeft;
+      const y = layer.offsetTop + parseInt(style.fontSize) * 0.15;
 
-		  const lines = layer.innerText.split('\n');
-		  const lineHeight = parseInt(style.fontSize) * 1.2;
-		  lines.forEach((line, i) => {
-			ctx.fillText(line, x, y + i * lineHeight);
-		  });
-		});
+      ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseInt(style.fontSize)}px ${style.fontFamily}`;
+      ctx.fillStyle = style.color;
+      ctx.textBaseline = 'top';
 
-		// 📱 Nếu là điện thoại → upload Cloudinary
-		if (isMobile) {
-		  canvas.toBlob(async (blob) => {
-			const formData = new FormData();
-			formData.append('file', blob);
-			formData.append('upload_preset', 'unsigned_preset');
-			formData.append('cloud_name', 'drlfmdmq4');
-			const res = await fetch(`https://api.cloudinary.com/v1_1/drlfmdmq4/image/upload`, {
-			  method: 'POST',
-			  body: formData,
-			});
+      const lines = layer.innerText.split('\n');
+      const lineHeight = parseInt(style.fontSize) * 1.2;
+      lines.forEach((line, i) => {
+        ctx.fillText(line, x, y + i * lineHeight);
+      });
+    });
 
-			const data = await res.json();
-			const imageUrl = data.secure_url;
+    // Tải trực tiếp ảnh đã ghép về máy (mọi thiết bị)
+    canvas.toBlob((blob) => {
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'imageCreated.png';
 
-			const a = document.createElement('a');
-			a.href = imageUrl;
-			a.download = 'imageCreated.png';
-			document.body.appendChild(a);
-			a.click();
-			setTimeout(() => {
-			  document.body.removeChild(a);
-			  hideLoading();
-			  showToast("Ảnh đã được tải!");
-			}, 1000);
-		  }, 'image/png');
-		} else {
-		  // 💻 Nếu là máy tính → tải trực tiếp blob
-		  canvas.toBlob((blob) => {
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'imageCreated.png';
-			document.body.appendChild(a);
-			a.click();
-			setTimeout(() => {
-			  URL.revokeObjectURL(url);
-			  document.body.removeChild(a);
-			  hideLoading();
-			  showToast("Ảnh đã được tải về!");
-			}, 1000);
-		  }, 'image/png');
-		}
-	  });
-	});
+      // Thêm vào DOM để Safari hoạt động đúng
+      document.body.appendChild(a);
+      a.click();
+
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        hideLoading();
+        showToast("Ảnh đã được tải về!");
+      }, 1500);
+    }, 'image/png');
+  });
+});
+
 
       </script>
       <script>
