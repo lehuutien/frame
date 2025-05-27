@@ -197,7 +197,7 @@
 		<div class="container-wrapper">
 		<div>
 			<div id="ios-preview" style="text-align:center; margin-top: 20px;">
-				<button id="reCreateImage">Tạo ảnh mới</button>
+				<button id="reCreateImage" style=display:none;>Tạo ảnh mới</button>
 			</div>
 			<div id="container">
 				<img id="user-image" draggable="false" />
@@ -325,6 +325,7 @@
 			document.getElementById('container').style.display = 'block';
 			document.getElementById('controls').style.display = 'block';
 			document.getElementById('ios-preview').style.display = 'none';
+			document.getElementById('reCreateImage').style.display = 'none';
 		});
 				 
         // Download image with frame and text
@@ -396,6 +397,7 @@
 		'">Nhấn giữ ảnh để lưu về máy</p>';
 		document.getElementById('container').style.display = 'none';
 		document.getElementById('controls').style.display = 'none';
+		document.getElementById('reCreateImage').style.display = 'block';
 	  hideLoading();
 	  showToast("Đã tạo ảnh. Nhấn giữ để lưu!");
 	}
