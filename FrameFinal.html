@@ -369,23 +369,33 @@
       });
     });
 
-    // Tải trực tiếp ảnh đã ghép về máy (mọi thiết bị)
+    // Tạo blob ảnh và xử lý tùy theo thiết bị
     canvas.toBlob((blob) => {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+
       const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'imageCreated.png';
 
-      // Thêm vào DOM để Safari hoạt động đúng
-      document.body.appendChild(a);
-      a.click();
-
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
+      if (isIOS) {
+        // 📱 iOS: mở ảnh trong tab mới
+        window.open(blobUrl, '_blank');
         hideLoading();
-        showToast("Ảnh đã được tải về!");
-      }, 1500);
+        showToast("Ảnh đã mở. Nhấn giữ để lưu ảnh.");
+      } else {
+        // ✅ Android + PC: tải trực tiếp
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'imageCreated.png';
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+          hideLoading();
+          showToast("Ảnh đã được tải về!");
+        }, 1500);
+      }
     }, 'image/png');
   });
 });
