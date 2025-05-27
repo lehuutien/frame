@@ -196,7 +196,9 @@
 	<body>
 		<div class="container-wrapper">
 		<div>
-			<div id="ios-preview" style="text-align:center; margin-top: 20px;"></div>
+			<div id="ios-preview" style="text-align:center; margin-top: 20px;">
+				<button id="reCreateImage">Tạo ảnh mới</button>
+			</div>
 			<div id="container">
 				<img id="user-image" draggable="false" />
 				<img id="frame" src="https://files.catbox.moe/qp8e4g.png" crossorigin="anonymous" alt="Frame" />
@@ -237,6 +239,7 @@
          const upload = document.getElementById('upload');
          const downloadBtn = document.getElementById('download');
          const zoomControl = document.getElementById('zoom');
+		 const reCreateImageBtn = document.getElementById('reCreateImage');
          
          let scale = 1;
          let pos = { x: 0, y: 0 };
@@ -318,7 +321,12 @@
 		  isDraggingImg = false;
 		});
 
-		 
+		reCreateImageBtn.addEventListener('click', () => {
+			document.getElementById('container').style.display = 'block';
+			document.getElementById('controls').style.display = 'block';
+			document.getElementById('ios-preview').style.display = 'none';
+		});
+				 
         // Download image with frame and text
         downloadBtn.addEventListener('click', () => {
   if (!userImg.src) {
@@ -380,10 +388,10 @@
 		'box-shadow:0 4px 12px rgba(0,0,0,0.2);" />' +
 		'<p style="' +
 		  'text-align: center;' +
-		  'font-family: Quicksand, sans-serif;' +
+		  'font-family:sriracha,cursive;' +
 		  'font-size: 20px;' +
 		  'font-weight: bold;' +
-		  'color: #333;' +
+		  'color: rgb(var(--color_40))' +
 		  'margin-top: 12px;' +
 		'">Nhấn giữ ảnh để lưu về máy</p>';
 		document.getElementById('container').style.display = 'none';
