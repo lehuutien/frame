@@ -197,7 +197,6 @@
 		<div class="container-wrapper">
 		<div>
 			<div id="ios-preview" style="text-align:center; margin-top: 20px;">
-				<button id="reCreateImage" style="display: none;">Tạo ảnh mới</button>
 			</div>
 			<div id="container">
 				<img id="user-image" draggable="false" />
@@ -239,7 +238,6 @@
          const upload = document.getElementById('upload');
          const downloadBtn = document.getElementById('download');
          const zoomControl = document.getElementById('zoom');
-		 const reCreateImageBtn = document.getElementById('reCreateImage');
          
          let scale = 1;
          let pos = { x: 0, y: 0 };
@@ -320,13 +318,6 @@
 		window.addEventListener('touchend', () => {
 		  isDraggingImg = false;
 		});
-
-		reCreateImageBtn.addEventListener('click', () => {
-			document.getElementById('container').style.display = 'block';
-			document.getElementById('controls').style.display = 'block';
-			document.getElementById('reCreateImage').style.display = 'none';
-			document.getElementById('ios-preview').style.display = 'none';
-		});
 				 
         // Download image with frame and text
         downloadBtn.addEventListener('click', () => {
@@ -383,25 +374,40 @@
 	if (isIOS) {
 	  const dataUrl = canvas.toDataURL('image/png');
 	  const previewDiv = document.getElementById('ios-preview');
+
 	  previewDiv.innerHTML =
 		'<img src="' + dataUrl + '" alt="Ảnh vừa tạo" ' +
 		'style="width:90%;max-width:500px;border-radius:12px;' +
-		'box-shadow:0 4px 12px rgba(0,0,0,0.2);" />' +
+		'box-shadow:0 4px 12px rgba(0,0,0,0.2);margin-bottom:12px;" />' +
 		'<p style="' +
 		  'text-align: center;' +
 		  'font-family:Quicksand, sans-serif;' +
 		  'font-size: 20px;' +
 		  'font-weight: bold;' +
 		  'color: #333;' +
-		  'margin-top: 12px;' +
-		'">Nhấn giữ ảnh để lưu về máy</p>';
-		document.getElementById('container').style.display = 'none';
-		document.getElementById('controls').style.display = 'none';
-		document.getElementById('reCreateImage').style.display = 'block';
+		  'margin-bottom: 16px;' +
+		'">Nhấn giữ ảnh để lưu về máy</p>' +
+		'<button id="reCreateImage" style="' +
+		  'display:block;' +
+		  'margin: 0 auto;' +
+		  'margin-top: 10px;' +
+		'">Tạo ảnh mới</button>';
+
+	  // Ẩn khối chỉnh sửa
+	  document.getElementById('container').style.display = 'none';
+	  document.getElementById('controls').style.display = 'none';
+	  document.getElementById('ios-preview').style.display = 'block';
+
 	  hideLoading();
 	  showToast("Đã tạo ảnh. Nhấn giữ để lưu!");
-	}
 
+	  // Gắn lại sự kiện cho nút Tạo ảnh mới (nút này vừa mới được tạo trong innerHTML)
+	  document.getElementById('reCreateImage').addEventListener('click', () => {
+		document.getElementById('container').style.display = 'block';
+		document.getElementById('controls').style.display = 'block';
+		document.getElementById('ios-preview').style.display = 'none';
+	  });
+	}
 	else {
       // ✅ Android + PC: tải về trực tiếp
       canvas.toBlob((blob) => {
