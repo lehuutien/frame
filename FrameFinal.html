@@ -224,7 +224,7 @@
 					<input type="file" id="upload" accept="image/*" style="display:none" />
 					<button id="upload-btn">Tải ảnh lên</button>
 					<button id="download">Tải về</button>
-					<button id="share">Chia sẻ lên Facebook</button>
+					<!-- <button id="share">Chia sẻ lên Facebook</button> -->
 				</div>
 			</div>
       </div>
@@ -430,95 +430,95 @@
 
       </script>
       <script>
-         const shareBtn = document.getElementById('share');
+         //const shareBtn = document.getElementById('share');
          
          shareBtn.addEventListener('click', async () => {
-  if (!userImg.src) {
-    alert("Vui lòng upload ảnh trước.");
-    return;
-  }
+		  if (!userImg.src) {
+			alert("Vui lòng upload ảnh trước.");
+			return;
+		  }
 
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  showLoading();
+		  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+		  showLoading();
 
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const containerRect = container.getBoundingClientRect();
+		  const canvas = document.createElement('canvas');
+		  const ctx = canvas.getContext('2d');
+		  const containerRect = container.getBoundingClientRect();
 
-  canvas.width = frameImg.naturalWidth;
-  canvas.height = frameImg.naturalHeight;
-  canvas.style.width = containerRect.width + 'px';
-  canvas.style.height = containerRect.height + 'px';
+		  canvas.width = frameImg.naturalWidth;
+		  canvas.height = frameImg.naturalHeight;
+		  canvas.style.width = containerRect.width + 'px';
+		  canvas.style.height = containerRect.height + 'px';
 
-  const scale = canvas.width / containerRect.width;
-  ctx.scale(scale, scale);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+		  const scale = canvas.width / containerRect.width;
+		  ctx.scale(scale, scale);
+		  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const userRect = userImg.getBoundingClientRect();
-  const drawX = userRect.left - containerRect.left;
-  const drawY = userRect.top - containerRect.top;
-  const drawWidth = userRect.width;
-  const drawHeight = userRect.height;
+		  const userRect = userImg.getBoundingClientRect();
+		  const drawX = userRect.left - containerRect.left;
+		  const drawY = userRect.top - containerRect.top;
+		  const drawWidth = userRect.width;
+		  const drawHeight = userRect.height;
 
-  ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
-  ctx.drawImage(frameImg, 0, 0, containerRect.width, containerRect.height);
+		  ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
+		  ctx.drawImage(frameImg, 0, 0, containerRect.width, containerRect.height);
 
-  textLayers.forEach(layer => {
-    const style = getComputedStyle(layer);
-    const x = layer.offsetLeft;
-    const y = layer.offsetTop + parseInt(style.fontSize) * 0.15;
+		  textLayers.forEach(layer => {
+			const style = getComputedStyle(layer);
+			const x = layer.offsetLeft;
+			const y = layer.offsetTop + parseInt(style.fontSize) * 0.15;
 
-    ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseInt(style.fontSize)}px ${style.fontFamily}`;
-    ctx.fillStyle = style.color;
-    ctx.textBaseline = 'top';
+			ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseInt(style.fontSize)}px ${style.fontFamily}`;
+			ctx.fillStyle = style.color;
+			ctx.textBaseline = 'top';
 
-    const lines = layer.innerText.split('\n');
-    const lineHeight = parseInt(style.fontSize) * 1.2;
-    lines.forEach((line, i) => {
-      ctx.fillText(line, x, y + i * lineHeight);
-    });
-  });
+			const lines = layer.innerText.split('\n');
+			const lineHeight = parseInt(style.fontSize) * 1.2;
+			lines.forEach((line, i) => {
+			  ctx.fillText(line, x, y + i * lineHeight);
+			});
+		  });
 
-  try {
-    const dataURL = canvas.toDataURL('image/png');
-    const blob = await (await fetch(dataURL)).blob();
+		  try {
+			const dataURL = canvas.toDataURL('image/png');
+			const blob = await (await fetch(dataURL)).blob();
 
-    const formData = new FormData();
-    formData.append('file', blob);
-    formData.append('upload_preset', 'unsigned_preset'); // 🔁 sửa theo preset bạn dùng
-    formData.append('cloud_name', 'drlfmdmq4'); // 🔁 sửa theo Cloudinary của bạn
+			const formData = new FormData();
+			formData.append('file', blob);
+			formData.append('upload_preset', 'unsigned_preset'); // 🔁 sửa theo preset bạn dùng
+			formData.append('cloud_name', 'drlfmdmq4'); // 🔁 sửa theo Cloudinary của bạn
 
-    const uploadRes = await fetch('https://api.cloudinary.com/v1_1/drlfmdmq4/image/upload', {
-      method: 'POST',
-      body: formData
-    });
+			const uploadRes = await fetch('https://api.cloudinary.com/v1_1/drlfmdmq4/image/upload', {
+			  method: 'POST',
+			  body: formData
+			});
 
-    const uploadData = await uploadRes.json();
-    const imageUrl = uploadData.secure_url;
-    hideLoading();
+			const uploadData = await uploadRes.json();
+			const imageUrl = uploadData.secure_url;
+			hideLoading();
 
-    // ✅ Nếu dùng Web Share API và KHÔNG bị nhúng iframe
-    if (isMobile && navigator.share && window.top === window.self) {
-      setTimeout(() => {
-        navigator.share({
-          title: 'Ảnh của tôi',
-          text: 'Xem ảnh tôi vừa tạo!',
-          url: imageUrl
-        })
-        .then(() => showToast("✅ Đã chia sẻ!"))
-        .catch(() => showToast("❌ Hủy chia sẻ hoặc có lỗi xảy ra. Vui lòng thử lại"));
-      }, 0);
-    } else {
-      // ❌ Bị nhúng (iframe) hoặc desktop → fallback chia sẻ Facebook
-      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}`;
-      window.open(fbUrl, '_blank');
-    }
+			// ✅ Nếu dùng Web Share API và KHÔNG bị nhúng iframe
+			if (isMobile && navigator.share && window.top === window.self) {
+			  setTimeout(() => {
+				navigator.share({
+				  title: 'Ảnh của tôi',
+				  text: 'Xem ảnh tôi vừa tạo!',
+				  url: imageUrl
+				})
+				.then(() => showToast("✅ Đã chia sẻ!"))
+				.catch(() => showToast("❌ Hủy chia sẻ hoặc có lỗi xảy ra. Vui lòng thử lại"));
+			  }, 0);
+			} else {
+			  // ❌ Bị nhúng (iframe) hoặc desktop → fallback chia sẻ Facebook
+			  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}`;
+			  window.open(fbUrl, '_blank');
+			}
 
-  } catch (err) {
-    hideLoading();
-    alert("❌ Không thể chia sẻ ảnh. Vui lòng thử lại.");
-  }
-});
+		  } catch (err) {
+			hideLoading();
+			alert("❌ Không thể chia sẻ ảnh. Vui lòng thử lại.");
+		  }
+		});
 
 
 
