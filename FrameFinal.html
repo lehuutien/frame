@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="vi">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Editor ảnh với nhiều text layer</title>
+		<style>
+			body {
+				font-family: 'Quicksand', sans-serif;
+				margin: 0;
+				background: #d6f4f6;
+				font-size: 14px;
+				color: #333;
+			}
+			
+			.container-wrapper {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 10px;
+				gap: 20px;
+			}
+			
+			#container {
+				position: relative;
+				width: 100%;
+				max-width: 500px;
+				height: auto;
+				aspect-ratio: 1 / 1;
+				background: #a7e2ed;
+				border-radius: 10px;
+				overflow: hidden;
+				box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+			}
+			
+			#frame {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 10;
+				pointer-events: none;
+			}
+			
+			#user-image {
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 1;
+				transform-origin: center center;
+				cursor: move;
+			}
+			
+			.text-layer {
+				position: absolute;
+				z-index: 5;
+				font-size: 20px;
+				color: black;
+				cursor: move;
+				white-space: pre-wrap;
+			}
+			
+			#controls {
+				width: 100%;
+				max-width: 500px;
+				background: transparent;
+				text-align: center;
+				margin-top: 10px;
+			}
+			
+			#upload,
+			#text-content {
+				width: 100%;
+				margin-top: 10px;
+				padding: 8px;
+				font-size: 14px;
+				border-radius: 6px;
+				border: 1px solid #ccc;
+			}
+			
+			button {
+				background-color: #ffeb3b; /* Màu vàng tươi */
+				color: #00acc1;            /* Màu xanh biển */
+				padding: 10px 20px;
+				border: 2px solid #00acc1; /* Viền xanh nhẹ */
+				border-radius: 12px;
+				font-size: 18px;
+				font-family: 'Quicksand', sans-serif;
+				font-style: italic;
+				font-weight: bold;
+				cursor: pointer;
+				transition: background-color 0.3s, transform 0.2s;
+			}
+
+			button:hover {
+				background-color: #fff176; /* Nhạt hơn khi hover */
+				transform: scale(1.05);
+			}
+			
+			.info-panel {
+				max-width: 350px;
+				font-size: 14px;
+			}
+			
+			.info-panel h2 {
+				color: #0077cc;
+				font-size: 18px;
+			}
+			
+			.info-panel p strong {
+				color: #ff6600;
+			}
+			
+			.info-panel img {
+				max-width: 100%;
+				margin-top: 10px;
+			}
+			
+			#frame-selector {
+				min-width: 110px;
+				padding: 10px 14px;
+				font-size: 16px;
+				border-radius: 8px;
+				border: 1px solid #ccc;
+				background-color: #fff;
+				color: #333;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+				appearance: none;
+				background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+				background-repeat: no-repeat;
+				background-position: right 12px center;
+				background-size: 16px 16px;
+				transition: border-color 0.2s ease, box-shadow 0.2s ease;
+				cursor: pointer;
+				font-family: 'Quicksand', sans-serif;
+				font-weight: bold;
+				font-style: italic;
+			}
+
+			#frame-selector:hover {
+			  border-color: #888;
+			}
+			
+			#zoom {
+				width: 60%;
+				max-width: 80px;
+			}
+
+			#frame-selector:focus {
+			  outline: none;
+			  border-color: #4a90e2;
+			  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+			}
+				
+			@media (min-width: 768px) {
+				.container-wrapper {
+					flex-direction: row;
+					align-items: flex-start;
+					justify-content: center;
+				}
+				#frame-selector {
+					width: 15%;
+				}
+			}
+			.control-row {
+			  display: flex;
+			  flex-wrap: wrap;
+			  justify-content: center;
+			  gap: 16px;
+			  margin-bottom: 10px;
+			}
+
+			.control-group {
+			  display: inline-flex;
+			  align-items: center;
+			  gap: 8px;
+			  white-space: nowrap;
+			}
+
+			.control-actions {
+			  display: flex;
+			  flex-wrap: wrap;
+			  justify-content: center;
+			  gap: 10px;
+			  margin-top: 10px;
+			}
+
+			@keyframes spin {
+			  0% { transform: rotate(0deg); }
+			  100% { transform: rotate(360deg); }
+			}
+		</style>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&family=Oswald&family=Lobster&family=Pacifico&family=Indie+Flower&family=Dancing+Script&family=Merriweather&family=Playfair+Display&family=Raleway&family=Quicksand&family=Ubuntu&family=Bebas+Neue&family=Shadows+Into+Light&family=Caveat&display=swap" rel="stylesheet" />
+	</head>
+	<body>
+		<div class="container-wrapper">
+		<div>
+			<div id="container">
+				<img id="user-image" draggable="false" />
+				<img id="frame" src="https://files.catbox.moe/qp8e4g.png" crossorigin="anonymous" alt="Frame" />
+			</div>
+			<div id="controls">
+				<div class="control-row">
+					<div class="control-group">
+					  <label><strong><em>Chọn khung ảnh:</em></strong></label>
+					  <select id="frame-selector">
+						<option value="https://files.catbox.moe/qp8e4g.png">Khung 1</option>
+						<option value="https://files.catbox.moe/crsa7e.png">Khung 2</option>
+						<option value="https://files.catbox.moe/tz6lu4.png">Khung 3</option>
+						<option value="https://files.catbox.moe/d4j901.png">Khung 4</option>
+						<option value="https://files.catbox.moe/b3go7y.png">Khung 5</option>
+					  </select>
+					</div>
+
+					<div class="control-group">
+					  <label><strong><em>Zoom:</em></strong></label>
+					  <input type="range" id="zoom" min="0.5" max="3" step="0.01" value="1" />
+					</div>
+				</div>
+				<div class="control-actions">
+					<input type="file" id="upload" accept="image/*" style="display:none" />
+					<button id="upload-btn">Tải ảnh lên</button>
+					<button id="download">Tải về</button>
+					<button id="share">Chia sẻ lên Facebook</button>
+				</div>
+			</div>
+      </div>
+      <script>
+         document.getElementById('upload-btn').addEventListener('click', () => {
+         	document.getElementById('upload').click();
+           });
+         const container = document.getElementById('container');
+         const userImg = document.getElementById('user-image');
+         const frameImg = document.getElementById('frame');
+         const upload = document.getElementById('upload');
+         const downloadBtn = document.getElementById('download');
+         const zoomControl = document.getElementById('zoom');
+         
+         let scale = 1;
+         let pos = { x: 0, y: 0 };
+         let isDraggingImg = false;
+         let dragStart = { x: 0, y: 0 };
+         
+         let textLayers = [];
+         let selectedTextLayer = null;
+         let dragData = { dragging: false, offsetX: 0, offsetY: 0 };
+         
+         // Upload image
+         upload.addEventListener('change', e => {
+         	const file = e.target.files[0];
+         	if (!file) return;
+         	const reader = new FileReader();
+         	reader.onload = ev => {
+         	  userImg.src = ev.target.result;
+         	  userImg.onload = () => {
+         		userImg.style.width = 'auto';
+         		userImg.style.height = '100%';
+         		pos = { x: 0, y: 0 };
+         		scale = 1;
+         		zoomControl.value = scale;
+         		updateTransform();
+         	  };
+         	};
+         	reader.readAsDataURL(file);
+         });
+         
+         // Zoom image
+         zoomControl.addEventListener('input', e => {
+         	scale = parseFloat(e.target.value);
+         	updateTransform();
+         });
+         
+         function updateTransform() {
+         	userImg.style.transform = `translate(${pos.x}px,${pos.y}px) scale(${scale})`;
+         }
+         
+         // Drag image
+         container.addEventListener('mousedown', e => {
+         	if (e.target !== userImg) return;
+         	isDraggingImg = true;
+         	dragStart.x = e.clientX - pos.x;
+         	dragStart.y = e.clientY - pos.y;
+         	e.preventDefault();
+         });
+         
+         window.addEventListener('mousemove', e => {
+         	if (!isDraggingImg) return;
+         	pos.x = e.clientX - dragStart.x;
+         	pos.y = e.clientY - dragStart.y;
+         	updateTransform();
+         });
+         
+         window.addEventListener('mouseup', e => {
+         	isDraggingImg = false;
+         });
+         
+		 // Drag image on touch devices
+		container.addEventListener('touchstart', e => {
+		  const touch = e.touches[0];
+		  if (e.target !== userImg) return;
+		  isDraggingImg = true;
+		  dragStart.x = touch.clientX - pos.x;
+		  dragStart.y = touch.clientY - pos.y;
+		  e.preventDefault();
+		});
+
+		window.addEventListener('touchmove', e => {
+		  if (!isDraggingImg) return;
+		  const touch = e.touches[0];
+		  pos.x = touch.clientX - dragStart.x;
+		  pos.y = touch.clientY - dragStart.y;
+		  updateTransform();
+		}, { passive: false });
+
+		window.addEventListener('touchend', () => {
+		  isDraggingImg = false;
+		});
+
+		 
+        // Download image with frame and text
+         downloadBtn.addEventListener('click', () => {
+	  if (!userImg.src) {
+		alert("Vui lòng upload ảnh trước.");
+		return;
+	  }
+		showLoading();
+	  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+	  Promise.all([
+		new Promise(res => userImg.complete ? res() : userImg.onload = res),
+		new Promise(res => frameImg.complete ? res() : frameImg.onload = res)
+	  ]).then(() => {
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+
+		const containerRect = container.getBoundingClientRect();
+		canvas.width = frameImg.naturalWidth;
+		canvas.height = frameImg.naturalHeight;
+		canvas.style.width = containerRect.width + 'px';
+		canvas.style.height = containerRect.height + 'px';
+
+		const scale = canvas.width / containerRect.width;
+		ctx.scale(scale, scale);
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		const userRect = userImg.getBoundingClientRect();
+		const drawX = userRect.left - containerRect.left;
+		const drawY = userRect.top - containerRect.top;
+		const drawWidth = userRect.width;
+		const drawHeight = userRect.height;
+
+		ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
+		ctx.drawImage(frameImg, 0, 0, containerRect.width, containerRect.height);
+
+		textLayers.forEach(layer => {
+		  const style = getComputedStyle(layer);
+		  const x = layer.offsetLeft;
+		  const y = layer.offsetTop + parseInt(style.fontSize) * 0.15;
+
+		  ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseInt(style.fontSize)}px ${style.fontFamily}`;
+		  ctx.fillStyle = style.color;
+		  ctx.textBaseline = 'top';
+
+		  const lines = layer.innerText.split('\n');
+		  const lineHeight = parseInt(style.fontSize) * 1.2;
+		  lines.forEach((line, i) => {
+			ctx.fillText(line, x, y + i * lineHeight);
+		  });
+		});
+
+		// 📱 Nếu là điện thoại → upload Cloudinary
+		if (isMobile) {
+		  canvas.toBlob(async (blob) => {
+			const formData = new FormData();
+			formData.append('file', blob);
+			formData.append('upload_preset', 'unsigned_preset');
+			formData.append('cloud_name', 'drlfmdmq4');
+			const res = await fetch(`https://api.cloudinary.com/v1_1/drlfmdmq4/image/upload`, {
+			  method: 'POST',
+			  body: formData,
+			});
+
+			const data = await res.json();
+			const imageUrl = data.secure_url;
+
+			const a = document.createElement('a');
+			a.href = imageUrl;
+			a.download = 'imageCreated.png';
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(() => {
+			  document.body.removeChild(a);
+			  hideLoading();
+			  showToast("Ảnh đã được tải!");
+			}, 1000);
+		  }, 'image/png');
+		} else {
+		  // 💻 Nếu là máy tính → tải trực tiếp blob
+		  canvas.toBlob((blob) => {
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'imageCreated.png';
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(() => {
+			  URL.revokeObjectURL(url);
+			  document.body.removeChild(a);
+			  hideLoading();
+			  showToast("Ảnh đã được tải về!");
+			}, 1000);
+		  }, 'image/png');
+		}
+	  });
+	});
+
+      </script>
+      <script>
+         const shareBtn = document.getElementById('share');
+         
+         shareBtn.addEventListener('click', async () => {
+		  if (!userImg.src) {
+			alert("Vui lòng upload ảnh trước.");
+			return;
+		  }
+
+		  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+		  showLoading();
+
+		  const canvas = document.createElement('canvas');
+		  const ctx = canvas.getContext('2d');
+		  const containerRect = container.getBoundingClientRect();
+
+		  canvas.width = frameImg.naturalWidth;
+		  canvas.height = frameImg.naturalHeight;
+		  canvas.style.width = containerRect.width + 'px';
+		  canvas.style.height = containerRect.height + 'px';
+
+		  const scale = canvas.width / containerRect.width;
+		  ctx.scale(scale, scale);
+		  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		  const userRect = userImg.getBoundingClientRect();
+		  const drawX = userRect.left - containerRect.left;
+		  const drawY = userRect.top - containerRect.top;
+		  const drawWidth = userRect.width;
+		  const drawHeight = userRect.height;
+
+		  ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
+		  ctx.drawImage(frameImg, 0, 0, containerRect.width, containerRect.height);
+
+		  textLayers.forEach(layer => {
+			const style = getComputedStyle(layer);
+			const x = layer.offsetLeft;
+			const y = layer.offsetTop + parseInt(style.fontSize) * 0.15;
+
+			ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseInt(style.fontSize)}px ${style.fontFamily}`;
+			ctx.fillStyle = style.color;
+			ctx.textBaseline = 'top';
+
+			const lines = layer.innerText.split('\n');
+			const lineHeight = parseInt(style.fontSize) * 1.2;
+			lines.forEach((line, i) => {
+			  ctx.fillText(line, x, y + i * lineHeight);
+			});
+		  });
+
+		  const dataURL = canvas.toDataURL('image/png');
+		  const blob = await (await fetch(dataURL)).blob();
+
+		  const formData = new FormData();
+		  formData.append('file', blob);
+		  formData.append('upload_preset', 'unsigned_preset');
+		  formData.append('cloud_name', 'drlfmdmq4');
+
+		  try {
+			const uploadRes = await fetch('https://api.cloudinary.com/v1_1/drlfmdmq4/image/upload', {
+			  method: 'POST',
+			  body: formData
+			});
+
+			const uploadData = await uploadRes.json();
+			const imageUrl = uploadData.secure_url;
+			hideLoading();
+
+			if (isMobile && navigator.share) {
+			  // ✅ Web Share API
+			  try {
+				await navigator.share({
+				  title: 'Ảnh của tôi',
+				  text: 'Xem ảnh tôi vừa tạo!',
+				  url: imageUrl
+				});
+				showToast("✅ Đã chia sẻ!");
+			  } catch (err) {
+				showToast("❌ Hủy chia sẻ hoặc có lỗi xảy ra. Vui lòng thử lại");
+			  }
+			} else {
+			  // 💻 Máy tính fallback
+			  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}`;
+			  window.open(fbUrl, '_blank');
+			}
+
+		  } catch (err) {
+			hideLoading();
+			alert("❌ Không thể chia sẻ ảnh. Vui lòng thử lại.");
+		  }
+		});
+
+
+      </script>
+      <script>
+         document.getElementById('frame-selector').addEventListener('change', function () {
+           const frameImg = document.getElementById('frame');
+           frameImg.src = this.value;
+         });
+		 
+		 function showToast(message) {
+		  const toast = document.getElementById('toast');
+		  toast.textContent = message;
+		  toast.style.display = 'block';
+		  setTimeout(() => {
+			toast.style.display = 'none';
+		  }, 2500);
+		}
+		function showLoading() {
+		  document.getElementById('loading-overlay').style.display = 'flex';
+		}
+
+		function hideLoading() {
+		  document.getElementById('loading-overlay').style.display = 'none';
+		}
+      </script>
+	  
+	<div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: #00acc1; color: white; padding: 10px 20px; border-radius: 20px; font-size: 16px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999;"></div>
+	<div id="loading-overlay" style="
+	  display: none;
+	  position: fixed;
+	  top: 0; left: 0;
+	  width: 100vw;
+	  height: 100vh;
+	  background-color: rgba(0, 0, 0, 0.4);
+	  z-index: 9998;
+	  align-items: center;
+	  justify-content: center;">
+	  <div class="spinner" style="
+		width: 50px;
+		height: 50px;
+		border: 6px solid #f3f3f3;
+		border-top: 6px solid #00acc1;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;">
+		</div>
+	</div>
+   </body>
+</html>
