@@ -337,8 +337,6 @@
     const containerRect = container.getBoundingClientRect();
     canvas.width = frameImg.naturalWidth;
     canvas.height = frameImg.naturalHeight;
-    canvas.style.width = containerRect.width + 'px';
-    canvas.style.height = containerRect.height + 'px';
 
     const scale = canvas.width / containerRect.width;
     ctx.scale(scale, scale);
@@ -369,37 +367,39 @@
       });
     });
 
-    // Tạo blob ảnh và xử lý tùy theo thiết bị
-    canvas.toBlob((blob) => {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
 
-      const blobUrl = URL.createObjectURL(blob);
-
-      if (isIOS) {
-        // 📱 iOS: mở ảnh trong tab mới
-        window.open(blobUrl, '_blank');
+    if (isIOS) {
+      const dataUrl = canvas.toDataURL('image/png');
+      const win = window.open();
+      if (win) {
+        win.document.write(`<html><body style="margin:0"><img src="${dataUrl}" style="width:100vw;display:block"/></body></html>`);
+        win.document.title = "Ảnh của bạn";
         hideLoading();
-        showToast("Ảnh đã mở. Nhấn giữ để lưu ảnh.");
+        showToast("Đã mở ảnh. Nhấn giữ để lưu.");
       } else {
-        // ✅ Android + PC: tải trực tiếp
+        hideLoading();
+        alert("Không thể mở ảnh. Hãy bật pop-up cho trình duyệt.");
+      }
+    } else {
+      canvas.toBlob((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
         a.download = 'imageCreated.png';
         document.body.appendChild(a);
         a.click();
-
         setTimeout(() => {
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
           hideLoading();
           showToast("Ảnh đã được tải về!");
         }, 1500);
-      }
-    }, 'image/png');
+      }, 'image/png');
+    }
   });
 });
-
 
       </script>
       <script>
