@@ -194,9 +194,9 @@
 	<link href="https://fonts.googleapis.com/css2?family=Roboto&family=Oswald&family=Lobster&family=Pacifico&family=Indie+Flower&family=Dancing+Script&family=Merriweather&family=Playfair+Display&family=Raleway&family=Quicksand&family=Ubuntu&family=Bebas+Neue&family=Shadows+Into+Light&family=Caveat&display=swap" rel="stylesheet" />
 	</head>
 	<body>
-		<div id="ios-preview" style="text-align:center; margin-top: 20px;"></div>
 		<div class="container-wrapper">
 		<div>
+			<div id="ios-preview" style="text-align:center; margin-top: 20px;"></div>
 			<div id="container">
 				<img id="user-image" draggable="false" />
 				<img id="frame" src="https://files.catbox.moe/qp8e4g.png" crossorigin="anonymous" alt="Frame" />
@@ -386,7 +386,8 @@
 		  'color: #333;' +
 		  'margin-top: 12px;' +
 		'">Nhấn giữ ảnh để lưu về máy</p>';
-		document.querySelector('.container-wrapper').style.display = 'none';
+		document.getElementById('container').style.display = 'none';
+		document.getElementById('controls').style.display = 'none';
 	  hideLoading();
 	  showToast("Đã tạo ảnh. Nhấn giữ để lưu!");
 	}
